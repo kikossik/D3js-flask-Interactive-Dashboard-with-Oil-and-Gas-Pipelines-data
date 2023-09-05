@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/spinner.css') }}" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body style="background-color:#e3e4e6;">
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+
+    <div class="buttons">
+        <button class="button button2" onclick="activate_bar_chart_sequence(0)" >Total Cost</button>
+        <button class="button button2" onclick="activate_bar_chart_sequence(1)">Number of Injured and Dead</button>
+        <button class="button button2" onclick="activate_bar_chart_sequence(2)">Number of Barrels Lost</button>
+        <button class="button button2" onclick="activate_bar_chart_sequence(3)">Number of Barrels Recovered</button>
+    </div>
+
+    <!-- loading spinner for fun -->
+    <div class="lds-default" ><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+
+    <div class="container-fluid">
+        <div class="row">
+          <div class="col-sx-6">
+            <div id="bar_chart"></div>
+          </div>
+        </div>
+    </div>
+    <div class="container-fluid for_transition">
+        <div class="row">
+            <div class="col-5 col1">
+                <div id="map">
+                    <div class="buttons_map">
+                        <h1 class="hl_text" style="margin-top: 5px;">Hazardous Liquids Spillage Data Points, 1986-2021
+                        </h1>
+                        <button class="button button2" onclick="activate_map_sequence('CORROSION')">Show 1986-2021 Data</button>
+                        <button class="button button3">
+                            <div id="q" display="none" style="position: absolute; display: none;"></div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" onmousemove="showTooltip(evt, final_var);" id="svgQ"
+                            onmouseout="hideTooltip();" height="14" class="bi bi-question-circle" viewBox="0 0 16 16" 
+                            style="margin-top:-3px;
+                            margin-right: 0px;
+                            height:15px;
+                            border-radius:50%;
+                            -moz-border-radius:50%;
+                            -webkit-border-radius:50%;
+                            width:15px;">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <h1 class="year"></h1>
+                <div class="slider" id="slider">&nbsp;
+                </div>
+                </div>
+                
+            </div>
+                <div class="col" style="margin-top: 5px;">
+                    <div class="row gy-5">
+                        <div class="col text-right">
+                        <h1 class="h1-text p-3 border bg-light">
+                            Interactive Dashboard for Hazardous Liquids Spillage Data, 1986-2021 using Flask and D3.js
+                            <br>David Tovmasyan, <span style="color: #D22B2B;">Stony Brook University</span>
+                        </h1>
+                    </div>
+                    </div>
+                    <div class="row gy-5">
+                        <div class="col text-right">
+                        <h2 class="p-text p-3 border bg-light align">
+                            This dashboard consists of a bar chart, where user can select one of the 4 variables to display on y-axis 
+                            with year on x-axis, and a map, which shows the approximate coordinates of pipeline failures. User can select 
+                            a <em>cause of pipeline failure</em> to highlight bars for the specific cause.
+                            The pipeline failure is shown
+                            as points instead of lines, because the shapefiles of actual pipelines is not available to public.
+                            <br>
+                            The data displayed is from <em>Federal Pipeline and Hazardous Materials Safety Administration (PHMSA)</em>. 
+                            PHMSA collects data on pipeline failures that occur in the Oil & Gas industry. On this dashboard, 
+                            failures of <em>Hazardous Liquids (HL)</em> pipelines are depicted: these are the pipelines that transport substances 
+                            that are considered hazardous due to their potential to harm human health, safety, and the environment if released. 
+                            The data is available from 1986 to 2021; the data collection has not been the same throughout the time periods, 
+                            which explains some inconsistencies (f.e. some causes of pipeline failure are missing/not reported from the
+                            old data - up to 2001).
+                            <b style="font-weight: 500;">All of the files for this dashboard, including the data, and also Jupyter Notebook with the data cleaning 
+                            and processing, can be found on <a href="https://www.w3schools.com/">my GitHub Page</a></b>.
+                        </h2>
+                    </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+
+    <script>
+        var latest_cause;
+    </script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bar_chart.js') }}"></script>
+    <script>
+        // string variable for QuestionMark tooltip
+        var text1 = 'Initially the data loads from 1986-2021. Use slider to display HL pipeline failures for a specific year. Click on '
+        var text2 = 'Show 1986-2021 Data'
+        var text3 = ' to display the full data for selected cause. Click on any button at the top or reload the page to display full data for all years.'
+        var final_var = text1.concat(text2.bold());
+        var final_var = final_var.concat(text3);
+
+        function activate_bar_chart_sequence(elem) {
+            // getting bar_chart_data from flask
+            get_data_from_flask("{{ url_for('get_bar_chart_data') }}", "bar_chart.js", elem);
+            get_data_from_flask("{{ url_for('get_map_data') }}", "map.js", null);
+        }
+        activate_bar_chart_sequence(0);
+        // -----------------------------
+        // function to get data from flask
+        function get_data_from_flask(url, file_js, third_arg) {
+            const urls = [url];
+            urls.map(url => d3.json(url, function(data) {
+                if (file_js == "map.js")
+                    map_data_to_js(data, third_arg);
+                if (file_js == "bar_chart.js")
+                    bar_chart_data_to_js(data, third_arg);
+            }));
+        }
+        // -----------------------------
+
+        // function for sending and displaying map.js
+        function map_data_to_js(dataset, cause) {
+            run_map(dataset, cause);
+        };
+        // function for sending and displaying bar_chart.js
+        function bar_chart_data_to_js(dataset, index) {
+            run_bar_chart(dataset[index], index);
+        };
+
+        // ------------------------------
+        // getting map_data from flask
+        get_data_from_flask("{{ url_for('get_map_data') }}", "map.js", null);
+        // function for the button to update map data to display full data from 1986 to 2021
+        function activate_map_sequence() {
+            if (latest_cause == undefined)
+                get_data_from_flask("{{ url_for('get_map_data') }}", "map.js", null);
+            else
+                get_data_from_flask("{{ url_for('get_map_data') }}", "map.js", latest_cause);
+            
+        }
+
+        function getCause(cause) {
+            get_data_from_flask("{{ url_for('get_map_data') }}", "map.js", cause);
+        }
+    </script>
+
+
+
+</body>
+</html>
