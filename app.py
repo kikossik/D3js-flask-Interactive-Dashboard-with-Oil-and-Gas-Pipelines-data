@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import json
 
+
 app = Flask(__name__)
+
 
 map_df = pd.read_csv("static/data/df_for_map.csv")
 bar_df = pd.read_csv("static/data/df_for_bar_chart.csv")
